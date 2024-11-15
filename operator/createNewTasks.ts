@@ -1,13 +1,13 @@
 import { ethers } from "ethers";
 import * as dotenv from "dotenv";
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 dotenv.config();
 
 // Setup environment variables
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
-/// TODO: Hack
+// TODO: Hack
 let chainId = 31337;
 
 const avsDeploymentData = JSON.parse(fs.readFileSync(path.resolve(__dirname, `../contracts/deployments/hello-world/${chainId}.json`), 'utf8'));
@@ -17,76 +17,24 @@ const helloWorldServiceManagerABI = JSON.parse(fs.readFileSync(path.resolve(__di
 // Initialize contract objects from ABIs
 const helloWorldServiceManager = new ethers.Contract(helloWorldServiceManagerAddress, helloWorldServiceManagerABI, wallet);
 
-// Predefined list of basketball teams
+// Predefined list of basketball teams (sequentially)
 const basketballTeams = [
     "Los Angeles Lakers",
     "Boston Celtics",
-    "Chicago Bulls",
-    "Golden State Warriors",
-    "Miami Heat",
-    "Toronto Raptors",
-    "San Antonio Spurs",
-    "Houston Rockets",
-    "Philadelphia 76ers",
-    "Brooklyn Nets",
-    "Dallas Mavericks",
-    "Denver Nuggets",
-    "Phoenix Suns",
-    "Milwaukee Bucks",
-    "New York Knicks",
-    "Utah Jazz",
-    "Orlando Magic",
-    "Indiana Pacers",
-    "Detroit Pistons",
-    "Portland Trail Blazers"
+    // Add more teams as needed
 ];
 
-// Predefined list of football teams
+// Predefined list of football teams (sequentially)
 const footballTeams = [
     "New England Patriots",
-    "Dallas Cowboys",
-    "Green Bay Packers",
-    "Pittsburgh Steelers",
-    "San Francisco 49ers",
-    "Chicago Bears",
-    "Miami Dolphins",
-    "Seattle Seahawks",
-    "Denver Broncos",
-    "New York Giants",
-    "Los Angeles Rams",
-    "Kansas City Chiefs",
-    "New York Jets",
-    "Buffalo Bills",
-    "Baltimore Ravens",
-    "Indianapolis Colts",
-    "Tampa Bay Buccaneers",
-    "Arizona Cardinals",
-    "Cleveland Browns",
-    "Tennessee Titans"
+    // Add more teams as needed
 ];
 
-// Predefined list of presidential candidates
+// Predefined list of presidential candidates (sequentially)
 const presidentialCandidates = [
     "Candidate A",
     "Candidate B",
-    "Candidate C",
-    "Candidate D",
-    "Candidate E",
-    "Candidate F",
-    "Candidate G",
-    "Candidate H",
-    "Candidate I",
-    "Candidate J",
-    "Candidate K",
-    "Candidate L",
-    "Candidate M",
-    "Candidate N",
-    "Candidate O",
-    "Candidate P",
-    "Candidate Q",
-    "Candidate R",
-    "Candidate S",
-    "Candidate T"
+    // Add more candidates as needed
 ];
 
 // Enum to represent different task types
@@ -96,33 +44,31 @@ enum TaskType {
     Presidential = "Presidential"
 }
 
-// Function to generate a random integer between min and max (inclusive)
-function getRandomInt(min: number, max: number): number {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+// Sequential indices for each TaskType
+let basketballIndex = 0;
+let footballIndex = 0;
+let presidentialIndex = 0;
 
-// Function to select a random team from a given array
-function selectRandomTeam(teams: string[]): string {
-    return teams[getRandomInt(0, teams.length - 1)];
-}
-
-// Function to generate a random matchup based on task type
-function generateRandomMatchup(): string {
-    // Randomly select a task type
+// Function to generate a sequential matchup based on task type
+export function generateSequentialMatchup(): string {
+    // Define the order of TaskTypes
     const taskTypes = Object.values(TaskType);
-    const selectedTaskType = taskTypes[getRandomInt(0, taskTypes.length - 1)];
+    
+    // Cycle through TaskTypes based on a simple index
+    // Here, we assume a fixed order: Basketball -> Football -> Presidential
+    const selectedTaskType = taskTypes[(basketballIndex + footballIndex + presidentialIndex) % taskTypes.length];
 
     let matchup = "";
 
     switch (selectedTaskType) {
         case TaskType.Basketball:
-            matchup = generateTeamMatchup(basketballTeams, "Basketball");
+            matchup = generateSequentialTeamMatchup(basketballTeams, "Basketball");
             break;
         case TaskType.Football:
-            matchup = generateTeamMatchup(footballTeams, "Football");
+            matchup = generateSequentialTeamMatchup(footballTeams, "Football");
             break;
         case TaskType.Presidential:
-            matchup = generateCandidateMatchup();
+            matchup = generateSequentialCandidateMatchup();
             break;
         default:
             matchup = "Undefined Task Type";
@@ -131,37 +77,39 @@ function generateRandomMatchup(): string {
     return matchup;
 }
 
-// Function to generate a team matchup
-function generateTeamMatchup(teams: string[], sport: string): string {
-    let team1 = selectRandomTeam(teams);
-    let team2 = selectRandomTeam(teams);
+// Function to generate a sequential team matchup
+function generateSequentialTeamMatchup(teams: string[], sport: string): string {
+    const team1 = teams[Math.floor(basketballIndex / 2) % teams.length];
+    const team2 = teams[(Math.floor(basketballIndex / 2) + 1) % teams.length];
 
-    // Ensure both teams are not the same
-    while (team2 === team1) {
-        team2 = selectRandomTeam(teams);
+    // Increment the index for the next call
+    if (sport === "Basketball") {
+        basketballIndex += 2;
+    } else if (sport === "Football") {
+        footballIndex += 2;
     }
 
     return `${sport}: ${team1} vs ${team2}`;
 }
 
-// Function to generate a presidential candidate matchup
-function generateCandidateMatchup(): string {
-    let candidate1 = selectRandomTeam(presidentialCandidates);
-    let candidate2 = selectRandomTeam(presidentialCandidates);
+// Function to generate a sequential presidential candidate matchup
+function generateSequentialCandidateMatchup(): string {
+    const candidate1 = presidentialCandidates[Math.floor(presidentialIndex / 2) % presidentialCandidates.length];
+    const candidate2 = presidentialCandidates[(Math.floor(presidentialIndex / 2) + 1) % presidentialCandidates.length];
 
-    // Ensure both candidates are not the same
-    while (candidate2 === candidate1) {
-        candidate2 = selectRandomTeam(presidentialCandidates);
-    }
+    // Increment the index for the next call
+    presidentialIndex += 2;
 
     return `Presidential: ${candidate1} vs ${candidate2}`;
 }
 
 // Function to create a new task
-async function createNewTask(taskName: string) {
+export async function createNewTask(taskName?: string) {
     try {
+        const finalTaskName = taskName || generateSequentialMatchup();
+
         // Send a transaction to the createNewTask function
-        const tx = await helloWorldServiceManager.createNewTask(taskName);
+        const tx = await helloWorldServiceManager.createNewTask(finalTaskName);
         
         // Wait for the transaction to be mined
         const receipt = await tx.wait();
@@ -169,15 +117,16 @@ async function createNewTask(taskName: string) {
         console.log(`Transaction successful with hash: ${receipt.hash}`);
     } catch (error) {
         console.error('Error sending transaction:', error);
+        throw error;
     }
 }
 
-// Function to create a new task with a random matchup every 24 seconds
+// Function to create a new task with a sequential matchup every 24 seconds
 function startCreatingTasks() {
     setInterval(() => {
-        const randomMatchup = generateRandomMatchup();
-        console.log(`Creating new task with matchup: ${randomMatchup}`);
-        createNewTask(randomMatchup);
+        const matchup = generateSequentialMatchup();
+        console.log(`Creating new task with matchup: ${matchup}`);
+        createNewTask(matchup);
     }, 24000);
 }
 
